@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+
+<!-- This app is written as a PoC for my project, dbernao@, please use code accordingly >-->
+<!-- We are going to use MAPBOX Javascript GL SDK and AWS DynamoDB Javascript SDK >-->
+
+<!-- It assumes we are only having 2 devices, for example: the kid's and parent's >-->
+<!-- In multi-users (more kids-parent couples) DynamoDB fine grained access at Row level with Roles linked to usernames >-->
+<!-- would be needed, to capture the belonging deviceids for the devices. This would be something easy to add >-->
+<!-- And yes... sure there is a more optimized way to code it, glad to hear back you >-->
+
+  <head>
+    <title>Dan Serverless GPS Project </title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.271.1.min.js"></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.css' rel='stylesheet' />
+  </head>
+
+
+
+  <body>
+    <div id='title'>Serverless GPS tracker, a project from Dan  * (Blue First device Red is second device)</div>
+    <div id='distancia' align="center" style="font-size:180%">  </div>
+    <div id='map' style='width: 600px; height: 400px; width: 100%'></div>
+    <script>
+
+   /* Set credentials for unathorized users
+
+    For more than users, would need auth. role in cognito like
+    stated in the following documentation (might need to include a new field in dynamo with userid)
+    about Role level access: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_examples_dynamodb_rows.html
+    For this PoC, will implement with unath. role access */
+
+
+  AWS.config.region = '--your region -- ';
+  AWS.config.dynamodb = { endpoint: 'https://your dynamo endpoint’ };
+  AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+  IdentityPoolId: ‘--your cognito identity pool--’
+  });
+
+
+
+
+     /* Main definition and functions to get data points from DynamoDB and calculate distance between them*/
+
+     var docClient = new AWS.DynamoDB.DocumentClient();
+     var distancia = 0;
+     var glati = 0;  // Global variable to recenter to
+     var glongi = 0; // Global variable to recenter to
+     var initrecen = 0; // Global variable to do the initial recentering
+
+/* Function to calculate distance between pair of devices */
+
+    function distance(lat1, lon1, lat2, lon2) {
+      var p = 0.017453292519943295;    // Math.PI / 180
+      var c = Math.cos;
+      var a = 0.5 - c((lat2 - lat1) * p)/2 +
+          c(lat1 * p) * c(lat2 * p) *
+          (1 - c((lon2 - lon1) * p))/2;
+
+       return 12742000 * Math.asin(Math.sqrt(a)); // 2 * R; R = 6371000 m. Our distance are going to be around that
+    }
+
+
+/* Function to recenter */
+
+  function recenter() {
+    map.setCenter([glongi,glati]);
+  }
+
+
+
+/* Looping function getting data from DynamoDB */
+
+    function readItem() {
+    var table = "--your dynamo GPS real time table--";
+    var deviceid = “first device”;   //Hardcoded for the PoC, need a higher level DynamoDB if multiple pair if devices are in the solution
+    var kiddeviceid = “second device“; //The pair device is also hardcoded, as above, would need a higher table for look up if more than 1 pairare in the game
+
+    var params = {
+        TableName: table,
+        Key:{
+            "deviceid": deviceid,
+        }
+    };
+
+     /* Get my GPS data */
+
+    valor = docClient.get(params, function(err, data) {
+        if (err) {
+            document.getElementById('textarea').innerHTML = "Unable to read item: " + "\n" + JSON.stringify(err, undefined, 2);
+        } else {
+            document.getElementById('textarea').innerHTML = "My Coordinates obtained: " + "\n" + JSON.stringify(data.Item, undefined, 2);
+            latix = JSON.stringify(data.Item.latitude, undefined, 2) ;
+            longix = JSON.stringify(data.Item.longitude, undefined, 2)
+            lati = latix.substring(1, latix.length - 1);
+            longi = longix.substring(1, longix.length - 1);
+            console.log("valor latitude: " + lati + " long: " + longi);
+
+            /* center map around my position again, update my marker */
+
+            if (initrecen < 2) {
+            map.setCenter([longi,lati]);
+            map.zoomTo(17);
+            initrecen = initrecen +1;
+            }
+            glongi = longi;
+            glati = lati
+            addMarkersmio(longi,lati);
+
+
+       /* Calculate kid GPS */
+
+
+       var params = {
+        TableName: table,
+        Key:{
+            "deviceid": kiddeviceid,
+        }
+    };
+
+      kvalor = docClient.get(params, function(err, data) {
+        if (err) {
+            document.getElementById('textareapair').innerHTML = "Pair - Unable to read item: " + "\n" + JSON.stringify(err, undefined, 2);
+        } else {
+            document.getElementById('textareapair').innerHTML = "Pair device coordinates obtained: " + "\n" + JSON.stringify(data.Item, undefined, 2);
+            klatix = JSON.stringify(data.Item.latitude, undefined, 2) ;
+            klongix = JSON.stringify(data.Item.longitude, undefined, 2)
+            klati = klatix.substring(1, klatix.length - 1);
+            klongi = klongix.substring(1, klongix.length - 1);
+            console.log("valor latitude: " + klati + " long: " + klongi);
+
+      
+            /* update my marker */
+
+            addMarkerskid(klongi,klati);
+
+
+               } //kid else closure
+      }); //kid docClient closure
+
+
+
+       /* Calculate distance and update value*/
+
+       var distancia = distance(klati,klongi,lati,longi);
+       document.getElementById('distancia').innerHTML = "Distance between the two devices: " + distancia.toFixed(2) + " meters";
+
+
+        } //else closure
+      }); //docClient closure
+    }  //readItem closure
+
+
+
+   function addMarkersmio(long,lat) {
+
+          /* Add mobile phone marker */
+
+      markermio.setLngLat([long, lat]);
+      markermio.addTo(map);
+
+
+   }
+
+
+
+
+          /* Add Kid GPS marker */
+
+    function addMarkerskid(longk,latk) {
+
+
+      markerkid.setLngLat([longk,latk]);
+      markerkid.addTo(map);
+    };
+
+
+    /*  Function to calculate the distance ,taken from StackOverflow: https://stackoverflow.com/questions/27928/calculate-distance-between-two-latitude-longitude-points-haversine-formula */
+
+
+
+
+
+
+
+
+    /* Get it on! draw the map and start the party  */
+
+
+      mapboxgl.accessToken = '--your access key--';
+      var map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v10',
+      center: [-3.7038, 40.4168], // starting position
+      zoom: 10 // starting zoom
+      });
+      map.addControl(new mapboxgl.NavigationControl());
+
+       var markerkid = new mapboxgl.Marker({ "color": "#b40219" })
+       var markermio = new mapboxgl.Marker().setLngLat([-3.8, 40.60]).addTo(map);
+
+       setInterval(readItem , 1500);
+
+
+
+
+
+
+
+    </script>
+
+  <input id="readItem" type="button" value="Re-center Map on my position" onclick="recenter();" />
+<br><br>
+<textarea readonly id= "textarea" style="width:300px; height:600px"></textarea>
+<textarea readonly id= "textareapair" style="width:300px; height:600px"></textarea>
+
+  </body>
+</html>
