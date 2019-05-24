@@ -1,7 +1,7 @@
 # What is this project
 
 
-About creating a Serverless GPS tracking and alerting solution based on AWS API Gateway, Lambda and Amazon Connect.
+This project is about creating a Serverless GPS tracking and alerting solution based on AWS API Gateway, Lambda and Amazon Connect.
 Commercial geo monitoring GPS solutions are not usually cost-effective, mainly due to the need of servers running 24x7, and expensive digital maps licenses from 3rd party companies. 
 
 Besides, these system work with proprietary GPS devices not compatible between them, that lock-in the users into each vendor’s devices.
