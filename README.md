@@ -1,5 +1,8 @@
 # What is this project
 About creating a Serverless GPS tracking and alerting solution based on AWS API Gateway, Lambda and Amazon Connect.
+Commercial geo monitoring GPS solutions are not usually cost-effective, mainly due to the need of servers running 24x7, and expensive digital maps licenses from 3rd party companies. Besides, these system work with proprietary GPS devices not compatible between them, that lock-in the users into each vendor’s devices.
+Also, alert and geofencing is normally limited to static geofencing, but:  what if we want to track the distance between two moving points? For these reasons I decided to build my own solution  in the AWS platform using a serverless approach. 
+
 
 # Objective
 Create a non-expensive solution that helps track assets easily and smoothly.
@@ -19,7 +22,7 @@ The system must be serverless, use Open Data and multi-device, this is: it must 
 In the first step of the architecture, we will ingest and decode the GPS location data coming from the GPS enabled devices. Remember that one of the main design’s premises is to be able to ingest data from as many types of devices as possible. Therefore, the project uses the approach of using HTTP to ingest GPS data into the system. This means that any device capable of posting its location data using HTTP protocol, will be compatible with this system. 
 As an example: Any GPS device with GPRS/3G capabilities (most of the GPS devices in the market), IoT devices with GPS and 3G modules or even any of the multiple existing mobile Apps (Android or iOS) that are capable of using mobile’s GPS module and store and post the device’s location.  Opening doors to a multi-device approach to GPS monitoring and no more proprietary lock-in into devices.
 
-Amazon API Gateway service will provide us with the a HTTP endpoint where the devices will publish their location to. It will be the front-door for the backend services where we will use and consume the device’s GPS information. If you are not familiar with Amazon API Gateway, please review the Amazon API Gateway documentation here.
+Amazon API Gateway service will provide us with the a HTTP endpoint where the devices will publish their location to. It will be the front-door for the backend services where we will use and consume the device’s GPS information. If you are not familiar with Amazon API Gateway, please review the Amazon API Gateway documentation.
 AWS Lambda is also very important for this first step. Lambda is an AWS service that will allow us to execute code without having to run servers or manage them. Running your backend with AWS Lambda allows you to execute your backend logic only when a request is coming to  Amazon API Gateway, not having servers running 24x7 that might be idle for most of the time. 
 
 In the architecture, Amazon API Gateway will receive the HTTP requests from GPS devices containing their location data.  Amazon API Gateway will invoke AWS Lambda to deal with this data. An AWS Lambda function will execute and will extract the coordinates information from the HTTP message, decode them and will store as  longitude plus latitude degrees format into a database table, in this case an Amazon DynamoDB table.  
