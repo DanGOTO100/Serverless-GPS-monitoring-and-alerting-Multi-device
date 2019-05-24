@@ -11,5 +11,5 @@ The system must be serverless, use Open Data and multi-device, this is: it must 
 
 # Overall Architecture
 
-![alt text](https://github.com/DanGOTO100/IoTAlarmsystem/blob/master/serverlessGPSarchitecture.png) 
+![alt text](https://github.com/DanGOTO100/IoTAlarmsystem/blob/master/ServerlessGPSarchitecture.png) 
 
