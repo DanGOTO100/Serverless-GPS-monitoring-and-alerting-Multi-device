@@ -1,13 +1,14 @@
-Serverless GPS tracking and alerting system based on AWS API Gateway, Lambda and Amazon Connect.
+#What is this project about anyway
+About creating a Serverless GPS tracking and alerting solution based on AWS API Gateway, Lambda and Amazon Connect.
 
-A summer project I have built:
+# Objective
+Create a non-expensive solution that helps track assets easily and smoothly.
 
-Targets: Create a non-expensive solution that helps track my kids in public spaces like public parks, shopping centres.
+# Design Requirements
+The system must be serverless, use Open Data and multi-device, this is: it must accept GPS signal from multiple inputs like a  mobile phone GPS App, GPS 3G/4G devices, and IoT devices. Also, it must support any type format: NMEA or whatever.
 
-The system must be serverless, use opendata and multi-device (Accept GPS signal from multiple inputs: mobile phones, GPS devices,
-in NMEA or other formats and IoT devices).
+**Alerting:** It must alert me if the distance between me and them is bigger than X (configurable) meters. Even if reference points are moving, we must be able to create a portable geofencing
 
-It must alert me if the distance between me and them is bigger than X (configurable) meters.
+# Overall Architecture
 
-The system must be used for other applications: tracking health patients, schools , pets, fleets, etc..
 
