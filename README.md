@@ -1,4 +1,4 @@
-# What is this project about anyway
+# What is this project
 About creating a Serverless GPS tracking and alerting solution based on AWS API Gateway, Lambda and Amazon Connect.
 
 # Objective
